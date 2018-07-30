@@ -2,16 +2,15 @@
 from bokeh.plotting import curdoc
 
 import importlib
-import os
 import pandas as pd
 import sqlite3
 
 
 class Controller(object):
 
-    def __init__(self):
-        self.appname = __file__.split(os.sep)[-4]
-        self.conn = sqlite3.connect(self.appname + '/data/oma.db')
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.conn = sqlite3.connect(cfg.db_path + 'oma.db')
         self.user = []
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -24,10 +23,10 @@ class Controller(object):
         if result:
             # create header panel
             view = importlib.import_module('modules.header.view')
-            view.create_module(self.user)
+            view.create_module(self.user, self.cfg)
             # create and monitoring
             view = importlib.import_module('modules.monitoring.view')
-            view.create_module(self.user)
+            view.create_module(self.user, self.cfg)
         else:
             user.value = ''
             password.value = ''

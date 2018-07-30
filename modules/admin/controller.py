@@ -1,16 +1,15 @@
 
 from bokeh.plotting import curdoc
 
-import os
 import pandas as pd
 import sqlite3
 
 
 class Controller(object):
 
-    def __init__(self, user):
-        self.appname = __file__.split(os.sep)[-4]
-        self.conn = sqlite3.connect(self.appname + '/data/oma.db')
+    def __init__(self, user, cfg):
+        self.cfg = cfg
+        self.conn = sqlite3.connect(cfg.db_path + 'oma.db')
         self.users = pd.read_sql_query("select * from usuarios", self.conn)
         self.users = self.users[self.users.user != 'jonate']
         self.user = user
@@ -68,4 +67,3 @@ class Controller(object):
         model.options = list(self.users.user)
         model.value = self.users.user.values[0]
         self.user_selected_callback(None, None, model.value)
-

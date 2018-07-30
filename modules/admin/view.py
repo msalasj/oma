@@ -8,9 +8,9 @@ from bokeh.plotting import figure, curdoc
 from modules.admin.controller import Controller
 
 
-def create_module(user):
+def create_module(user, cfg):
     # start controller
-    controller = Controller(user)
+    controller = Controller(user, cfg)
     # module
     user_admin = create_user_admin(controller)
     itin_admin = create_itin_admin(controller)

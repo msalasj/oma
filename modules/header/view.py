@@ -7,9 +7,9 @@ from bokeh.plotting import curdoc, figure
 from modules.header.controller import Controller
 
 
-def create_module(user):
+def create_module(user, cfg):
     # start controller
-    controller = Controller(user)
+    controller = Controller(user, cfg)
     # header panel
     dashboard = create_panel(controller)
     # curdoc().remove_root(curdoc().roots[0])
@@ -20,7 +20,7 @@ def create_module(user):
 def create_panel(controller):
     # im logo
     logo = figure()
-    logo = config_fig_logo(logo, controller.appname)
+    logo = config_fig_logo(logo, controller.cfg.app_name)
     logo.css_classes = ['panel_logo']
     # title
     title = Div(text='Optimización y Mantenimiento de la Agenda',

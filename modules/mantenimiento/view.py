@@ -1,8 +1,8 @@
 
 from bokeh.layouts import layout
-from bokeh.models import HoverTool, DatetimeTickFormatter, NumeralTickFormatter, \
+from bokeh.models import HoverTool, NumeralTickFormatter, \
     ColumnDataSource, Circle, Range1d, GMapPlot, GMapOptions, PanTool, WheelZoomTool, Spacer
-from bokeh.models.widgets import Div, Select, TextInput, Button, RadioButtonGroup, CheckboxGroup
+from bokeh.models.widgets import Div, Select, Button, RadioButtonGroup, CheckboxGroup
 from bokeh.plotting import figure, curdoc
 
 from modules.mantenimiento.controller import Controller
@@ -10,9 +10,9 @@ from modules.mantenimiento.controller import Controller
 import numpy as np
 
 
-def create_module(user):
+def create_module(user, cfg):
     # start controller
-    controller = Controller(user)
+    controller = Controller(user, cfg)
     # module
     # Section 1
     title1 = Div(text='Selección del Universo Objetivo', css_classes=['mtt_title'])
@@ -26,7 +26,7 @@ def create_module(user):
                    options=["TODOS"], width=200, css_classes=['mtt_menu3'])
 
     menu4 = Select(title="Corregimiento:", value="TODOS", name='menu4',
-                   options=["TODOS"],  width=200, css_classes=['mtt_menu4'])
+                   options=["TODOS"], width=200, css_classes=['mtt_menu4'])
 
     menu5 = Select(title="Tipología:", value="TODOS", name='menu5',
                    options=["TODOS"], width=200, css_classes=['mtt_menu5'])

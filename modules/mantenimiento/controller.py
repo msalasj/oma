@@ -4,7 +4,6 @@ from datetime import datetime
 
 import math
 import numpy as np
-import os
 import pandas as pd
 import pickle
 import random
@@ -13,9 +12,9 @@ import sqlite3
 
 class Controller(object):
 
-    def __init__(self, user):
-        self.appname = __file__.split(os.sep)[-4]
-        self.conn = sqlite3.connect(self.appname + '/data/oma.db')
+    def __init__(self, user, cfg):
+        self.cfg = cfg
+        self.conn = sqlite3.connect(cfg.db_path + 'oma.db')
         self.user = user
         # itins
         itins = pd.read_sql_query("select * from info_itin", self.conn)
@@ -32,7 +31,7 @@ class Controller(object):
         self.witins = self.itins
         # add fechas
         self.now = datetime.now()
-        self.ini_year = datetime(year=self.now.year-1, month=12, day=1).timestamp()
+        self.ini_year = datetime(year=self.now.year - 1, month=12, day=1).timestamp()
         self.end_year = datetime(year=self.now.year, month=12, day=31).timestamp()
         query = "select * from fechas_itin where f_plan between {} and {}"\
             .format(self.ini_year, self.end_year)
@@ -128,13 +127,13 @@ class Controller(object):
         model.data_source.data = dict(x=dias, top=cxd, y=cxd)
         m1 = [np.mean(cxd)]
         model = curdoc().get_model_by_name('line1.2')
-        model.data_source.data = dict(x=dias, y=m1*nd)
+        model.data_source.data = dict(x=dias, y=m1 * nd)
         # cantidad de itinerarios
         model = curdoc().get_model_by_name('vbar2')
         model.data_source.data = dict(x=dias, top=ixd, y=ixd)
         m2 = [np.mean(ixd)]
         model = curdoc().get_model_by_name('line2.2')
-        model.data_source.data = dict(x=dias, y=m2*nd)
+        model.data_source.data = dict(x=dias, y=m2 * nd)
         # mapa
         itins = data[data.latitud > 0]
         dialect = dialect[data.latitud.values > 0]
@@ -142,7 +141,7 @@ class Controller(object):
         x = itins.longitud.values
         y = itins.latitud.values
         z = itins.clientes.values
-        sizes = 1 + 30*z/np.max(z)
+        sizes = 1 + 30 * z / np.max(z)
         if len(dialect) > 1:
             colors = [self.day_colors[int(x)] for x in dialect]
         else:
@@ -154,13 +153,13 @@ class Controller(object):
             itin=itins.num_itin.values
         )
         fmap = curdoc().get_model_by_name('fig3')
-        fmap.map_options.lng = (x.max() + x.min())/2
-        fmap.map_options.lat = (y.max() + y.min())/2
+        fmap.map_options.lng = (x.max() + x.min()) / 2
+        fmap.map_options.lat = (y.max() + y.min()) / 2
         zoom = 7
         if self.xrange == 0:
             self.xrange = np.abs(x.max() - x.min())
         if len(x) > 1:
-            zoom = zoom + int(np.log2(self.xrange/np.abs(x.max() - x.min())))
+            zoom = zoom + int(np.log2(self.xrange / np.abs(x.max() - x.min())))
         else:
             zoom = zoom
         fmap.map_options.zoom = zoom
@@ -172,7 +171,7 @@ class Controller(object):
     def get_day_distances(self, itins, dialect, nd):
         day_dist = np.zeros(nd)
         for i in range(nd):
-            datai = itins[dialect == i+1]
+            datai = itins[dialect == i + 1]
             if len(datai) > 1:
                 x = datai.longitud.values
                 y = datai.latitud.values
@@ -219,13 +218,13 @@ class Controller(object):
             cxd[i] = np.sum(clientes[pos])
             ixd[i] = sum(pos)
         # criterios de optimización
-        swc = np.sum(clientes)/nd
-        swi = round(len(clientes)/nd)
+        swc = np.sum(clientes) / nd
+        swi = round(len(clientes) / nd)
         pkih = 1 + werr  # 3% de error
         pkil = 1 - werr
-        kpic = np.round([pkil*swc, pkih*swc])
-        ik = np.ceil(werr*swi)
-        kpii = [swi-ik, swi+ik]
+        kpic = np.round([pkil * swc, pkih * swc])
+        ik = np.ceil(werr * swi)
+        kpii = [swi - ik, swi + ik]
         newday = np.zeros(len(lat))
         for i in range(nd):
             # ini
@@ -289,10 +288,10 @@ class Controller(object):
         miny = np.min(h)
         maxy = np.max(h)
         if maxy > miny:
-            m = 1/(maxy - miny)
-            y = m*h - m*miny
+            m = 1 / (maxy - miny)
+            y = m * h - m * miny
         else:
-            y = 0*h
+            y = 0 * h
         return y
 
     @staticmethod
@@ -300,7 +299,7 @@ class Controller(object):
         w1 = int(curdoc().get_model_by_name('menu7').value)
         w2 = int(curdoc().get_model_by_name('menu8').value)
         w3 = int(curdoc().get_model_by_name('menu9').value)
-        werr = int(curdoc().get_model_by_name('menu6').value)/100
+        werr = int(curdoc().get_model_by_name('menu6').value) / 100
         simulate = False
         if curdoc().get_model_by_name('checkbox1').active:
             simulate = True
@@ -327,13 +326,13 @@ class Controller(object):
             cxd[i] = np.sum(clientes[pos])
             ixd[i] = sum(pos)
         # criterios de optimización
-        swc = np.sum(clientes)/nd
-        swi = round(len(clientes)/nd)
+        swc = np.sum(clientes) / nd
+        swi = round(len(clientes) / nd)
         pkih = 1 + werr  # 3% de error
         pkil = 1 - werr
-        kpic = np.round([pkil*swc, pkih*swc])
-        ik = np.ceil(werr*swi)
-        kpii = [swi-ik, swi+ik]
+        kpic = np.round([pkil * swc, pkih * swc])
+        ik = np.ceil(werr * swi)
+        kpii = [swi - ik, swi + ik]
         newday = np.zeros(len(lat))
         for i in range(nd):
             # ini

@@ -2,7 +2,7 @@
 from bokeh.layouts import layout
 from bokeh.models import HoverTool, DatetimeTickFormatter, NumeralTickFormatter, \
     ColumnDataSource, Circle, Range1d, GMapPlot, GMapOptions, PanTool, WheelZoomTool
-from bokeh.models.widgets import Div, Select, RadioButtonGroup
+from bokeh.models.widgets import Select, RadioButtonGroup
 from bokeh.plotting import figure, curdoc
 
 from modules.monitoring.controller import Controller
@@ -10,9 +10,9 @@ from modules.monitoring.controller import Controller
 import numpy as np
 
 
-def create_module(user):
+def create_module(user, cfg):
     # start controller
-    controller = Controller(user)
+    controller = Controller(user, cfg)
     # hover
     hover1 = create_hover(1)
     # module
@@ -84,7 +84,7 @@ def create_module(user):
                    options=["opt1", "opt2", "opt3", "opt4"],
                    width=150, css_classes=['monitoring_menu1'])
     menu1.options = controller.periodos_str
-    menu1.value = controller.periodos_str[controller.now.month-1]
+    menu1.value = controller.periodos_str[controller.now.month - 1]
 
     menu2 = Select(title="Delegación:", value='TODOS', name='menu2',
                    options=['TODOS'],
@@ -171,13 +171,13 @@ def create_module(user):
         css_classes=['monitoring_button_group1'])
     button_group1.on_change('active', controller.on_change_menus)
 
-    widget1 = layout([[fig1], [fig2]],  sizing_mode='fixed')
+    widget1 = layout([[fig1], [fig2]], sizing_mode='fixed')
     widget2 = layout([
         [fig3],
         [menu1, menu2, menu3],
         [menu4, menu5, menu6],
-    ],  sizing_mode='fixed')
-    widget3 = layout([[fig6], [button_group1]],  sizing_mode='fixed')
+    ], sizing_mode='fixed')
+    widget3 = layout([[fig6], [button_group1]], sizing_mode='fixed')
     dashboard = layout([
         [widget1, widget2],
         [fig4, fig5],

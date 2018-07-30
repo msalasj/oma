@@ -7,17 +7,17 @@ from bokeh.plotting import figure, curdoc
 from modules.login.controller import Controller
 
 
-def create_module():
+def create_module(cfg):
     # start controller
-    controller = Controller()
+    controller = Controller(cfg)
     # im logo
     logo = figure()
-    logo = config_fig_logo(logo, controller.appname)
+    logo = config_fig_logo(logo, controller.cfg.app_name)
     logo.css_classes = ['login_logo']
     # title1
     title1 = Div(text='Optimización y Mantenimiento de la Agenda',
                  css_classes=['login_title1'])
-    line = Div(text='_'*50, css_classes=['login_line'])
+    line = Div(text='_' * 50, css_classes=['login_line'])
     # title2
     title2 = Div(text='Control de Acceso', css_classes=['login_title2'])
     validation = Div(text='', css_classes=['login_validation'],

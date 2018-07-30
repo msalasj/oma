@@ -3,7 +3,6 @@ from bokeh.plotting import curdoc
 from datetime import datetime
 
 import numpy as np
-import os
 import pandas as pd
 import pickle
 import random
@@ -13,16 +12,16 @@ import time
 
 class Controller(object):
 
-    def __init__(self, user):
-        self.appname = __file__.split(os.sep)[-4]
-        self.conn = sqlite3.connect(self.appname + '/data/oma.db')
+    def __init__(self, user, cfg):
+        self.cfg = cfg
+        self.conn = sqlite3.connect(cfg.db_path + 'oma.db')
         self.user = user
         self.fechas_itin = type('', (), {})()
         self.info_itin = type('', (), {})()
         self.ini_year = 0
         self.end_year = 0
         self.xrange = 0.0
-        colors = pickle.load(open(self.appname + '/data/colors.p', 'rb'))
+        colors = pickle.load(open(self.cfg.app_name + '/data/colors.p', 'rb'))
         self.day_colors = random.sample(colors, 31)
         # periodos
         self.now = datetime.now()
@@ -30,7 +29,7 @@ class Controller(object):
         self.periodos_tm = np.zeros(12)
         self.periodos_str = []
         for i in range(12):
-            date = datetime(year=self.now.year, month=i+1, day=1)
+            date = datetime(year=self.now.year, month=i + 1, day=1)
             self.periodos_tm[i] = date.timestamp()
             self.periodos_str.append(date.strftime('%m-%Y'))
 
@@ -38,7 +37,7 @@ class Controller(object):
         self.conn.close()
 
     def get_user_data(self):
-        self.ini_year = datetime(year=self.now.year-1, month=12, day=1).timestamp()
+        self.ini_year = datetime(year=self.now.year - 1, month=12, day=1).timestamp()
         self.end_year = datetime(year=self.now.year, month=12, day=31).timestamp()
         query = "select * from fechas_itin where f_plan between {} and {}"\
             .format(self.ini_year, self.end_year)
@@ -79,22 +78,22 @@ class Controller(object):
         groups = fechas[['f_plan', 'clientes_plan']].groupby('f_plan').sum()
         line = curdoc().get_model_by_name('line1')
         line.data_source.data = dict(
-            x=list(1000*groups.index), y=groups.clientes_plan.values)
+            x=list(1000 * groups.index), y=groups.clientes_plan.values)
         # cantidad de clientes real
         groups = fechas[fechas.f_real < time.time()][['f_real', 'clientes_plan']].groupby('f_real').sum()
         line = curdoc().get_model_by_name('line1.2')
         line.data_source.data = dict(
-            x=list(1000*groups.index), y=groups.clientes_plan.values)
+            x=list(1000 * groups.index), y=groups.clientes_plan.values)
         # cantidad de itinerarios plan
         groups = fechas[['f_plan']].groupby('f_plan').size()
         line = curdoc().get_model_by_name('line2')
         line.data_source.data = dict(
-            x=list(1000*groups.keys()), y=groups.values)
+            x=list(1000 * groups.keys()), y=groups.values)
         # cantidad itin real
         groups = fechas[fechas.f_real < time.time()][['f_real']].groupby('f_real').size()
         line = curdoc().get_model_by_name('line2.2')
         line.data_source.data = dict(
-            x=list(1000*groups.keys()), y=groups.values)
+            x=list(1000 * groups.keys()), y=groups.values)
         # geo map
         itins = itins[itins.latitud > 0]
         itins = self.filter_data_by_day(itins)
@@ -102,7 +101,7 @@ class Controller(object):
         x = itins.longitud.values
         y = itins.latitud.values
         z = itins.clientes.values
-        sizes = 1 + 30*z/np.max(z)
+        sizes = 1 + 30 * z / np.max(z)
         pos = [datetime.fromtimestamp(x).day for x in itins.f_plan.values]
         if len(pos) > 1:
             colors = [self.day_colors[int(x)] for x in pos]
@@ -115,13 +114,13 @@ class Controller(object):
             itin=itins.num_itin.values
         )
         fmap = curdoc().get_model_by_name('fig3')
-        fmap.map_options.lng = (x.max() + x.min())/2
-        fmap.map_options.lat = (y.max() + y.min())/2
+        fmap.map_options.lng = (x.max() + x.min()) / 2
+        fmap.map_options.lat = (y.max() + y.min()) / 2
         zoom = 7
         if self.xrange == 0:
             self.xrange = np.abs(x.max() - x.min())
         if len(x) > 1:
-            zoom = zoom + int(np.log2(self.xrange/np.abs(x.max() - x.min())))
+            zoom = zoom + int(np.log2(self.xrange / np.abs(x.max() - x.min())))
         else:
             zoom = zoom
         fmap.map_options.zoom = zoom
@@ -174,9 +173,9 @@ class Controller(object):
         pk = options.index(value)
         ini_lim = self.periodos_tm[pk]
         if pk < 11:
-            end_lim = self.periodos_tm[pk+1] - 3600*24
+            end_lim = self.periodos_tm[pk + 1] - 3600 * 24
         else:
-            end_lim = self.periodos_tm[pk] + 3600*24*30
+            end_lim = self.periodos_tm[pk] + 3600 * 24 * 30
         fechas = fechas[(fechas.f_plan >= ini_lim) &
                         (fechas.f_plan <= end_lim)]
         # from itins to fechas
@@ -267,12 +266,12 @@ class Controller(object):
                            how='inner')
             fechas[:, 1] = iii.f_plan.values
             fechas[:, 3] = iii.f_real.values
-            d1 = (fechas[:, 1] - fechas[:, 0])/(3600*24)
-            mdf[i-1] = np.mean(d1)
+            d1 = (fechas[:, 1] - fechas[:, 0]) / (3600 * 24)
+            mdf[i - 1] = np.mean(d1)
             pk = np.where((fechas[:, 2] < today) & (fechas[:, 3] < today))[0]
-            d2 = (fechas[pk, 3] - fechas[pk, 2])/(3600*24)
+            d2 = (fechas[pk, 3] - fechas[pk, 2]) / (3600 * 24)
             if len(pk) > 0:
-                mdf_real[i-1] = np.mean(d2)
+                mdf_real[i - 1] = np.mean(d2)
             fechas[:, 0] = fechas[:, 1]
             fechas[:, 2] = fechas[:, 3]
             # histogramas
@@ -301,10 +300,10 @@ class Controller(object):
         pcobro = fechas.pcobro_plan.values
         for i in range(12):
             # plan
-            pk = np.where((meses == i+1) & (dias > venc[i]))[0]
+            pk = np.where((meses == i + 1) & (dias > venc[i]))[0]
             data[i, :] = [len(pk), np.sum(consumos[pk]), np.sum(pcobro[pk])]
             # real
             if i <= (self.now.month - 1):
-                pk = np.where((mesesr == i+1) & (diasr > venc[i]))[0]
+                pk = np.where((mesesr == i + 1) & (diasr > venc[i]))[0]
                 datar[i, :] = [len(pk), np.sum(consumos[pk]), np.sum(pcobro[pk])]
         return data, datar
