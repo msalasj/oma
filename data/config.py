@@ -1,4 +1,4 @@
 
 # db path
-db_path = 'D:/Applications/crowis/data_bases/oma/'
+db_path = '/Users/jonate/sqlite_db/eca/oma/'
 app_name = 'oma'

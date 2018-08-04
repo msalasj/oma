@@ -45,7 +45,7 @@ class Controller(object):
         # dias
         self.dias = []
         # colors
-        colors = pickle.load(open(self.appname + '/data/colors.p', 'rb'))
+        colors = pickle.load(open(self.cfg.app_name + '/data/colors.p', 'rb'))
         self.day_colors = random.sample(colors, 31)
         self.xrange = 0.0
 
