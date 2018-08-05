@@ -209,8 +209,8 @@ class Controller(object):
         weights = [w1, w2, w3]
         # plan day
         planday = np.zeros(len(lat))
-        cxd = np.zeros(nd)
-        ixd = np.zeros(nd)
+        cxd = np.zeros(nd)  # clientes por dia
+        ixd = np.zeros(nd)  # itinerarios por dia
         for i in range(nd):
             pos = fplan == dias[i, 3]
             planday[pos] = dias[i, 0]
@@ -218,8 +218,8 @@ class Controller(object):
             cxd[i] = np.sum(clientes[pos])
             ixd[i] = sum(pos)
         # criterios de optimización
-        swc = np.sum(clientes) / nd
-        swi = round(len(clientes) / nd)
+        swc = np.sum(clientes) / nd  # swc: clientes
+        swi = round(len(clientes) / nd)  # swi: itinerarios
         pkih = 1 + werr  # 3% de error
         pkil = 1 - werr
         kpic = np.round([pkil * swc, pkih * swc])
@@ -270,6 +270,8 @@ class Controller(object):
             # save results
             cxd[i] = nc
             ixd[i] = ni
+        # mejorar empanada
+        pass  # nivelar los ultimos ~3 dias de la mejor manera
         # update plots
         self.update_plots(data, newday, dias[:, 0], cxd, ixd)
         # itins faltantes:
