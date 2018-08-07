@@ -213,7 +213,7 @@ class Controller(object):
         ixd = np.zeros(nd)  # itinerarios por dia
         for i in range(nd):
             pos = fplan == dias[i, 3]
-            planday[pos] = dias[i, 0]
+            planday[pos] = dias[i, 0]  # dia de lectura de cada itin
             pos = (fplan == dias[i, 3]) & (lat == 0)
             cxd[i] = np.sum(clientes[pos])
             ixd[i] = sum(pos)
@@ -229,38 +229,42 @@ class Controller(object):
         for i in range(nd):
             # ini
             dia = i + 1
-            nc = cxd[i]
-            ni = ixd[i]
-            newday[(planday == dia) & (lat == 0)] = dia
-            pi = (planday == dia) & (lat > 0)
-            xi = np.median(pi)
-            yi = np.median(pi)
+            nc = cxd[i]  # numero de clientes
+            ni = ixd[i]  # numero de itinerarios
+            newday[(planday == dia) & (lat == 0)] = dia  # asigancion del dia a los que no tienen geo
+            pi = (planday == dia) & (lat > 0)  # posiciones o indices de los itins que pertenecen al dia i y tienen geo
+            xi = np.median(pi)  # centro x del dia
+            yi = np.median(pi)  # centro y del dia
             val1 = True
-            while val1:
-                pij = (newday == 0) & (lat > 0)
-                ind = np.where(pij)[0]
-                # criterios
+            while val1:  # while para añadir o sacar itinerarios del dia
+                pij = (newday == 0) & (lat > 0)  # todos los itins disponibles
+                ind = np.where(pij)[0]  # indices de todos los itins disponibles
+                # criterios: son usados para priorizar los itinerarios que ingresan al dia i
+                # como te daras cuenta aca priorizo a todos los itins faltantes (sin un newday asignado),
+                # pero en lo que charlamos la idea es dejar fijos los que hoy pertenecen a ese dia y
+                # decidir si agregar o sacar.
                 cri = np.zeros([len(ind), 3])
-                cri[:, 0] = self.normalize_zo(np.abs(swc - nc - clientes[pij]))
-                cri[:, 1] = self.normalize_zo(np.abs(dia - planday[pij]))
+                cri[:, 0] = self.normalize_zo(np.abs(swc - nc - clientes[pij]))  # por cantidad de clientes
+                cri[:, 1] = self.normalize_zo(np.abs(dia - planday[pij]))  # por el dia de lectura
                 dist = np.sqrt((lon[pij] - xi)**2 + (lat[pij] - yi)**2)
-                cri[:, 2] = self.normalize_zo(dist)
-                # evaluación
-                ivalue = np.average(cri, axis=1, weights=weights)
-                # selección
-                val2 = True
+                cri[:, 2] = self.normalize_zo(dist)  # por la distancia al centro del dia i
+                # evaluación ***
+                ivalue = np.average(cri, axis=1, weights=weights)  # promedio de los criterios segun los pesos de los usuarios
+                # selección ***
+                val2 = True  #
                 continuar = True
                 while val2:
-                    pmin = ivalue.argmin()
+                    pmin = ivalue.argmin()  # index del itin mas opcionado
                     if ivalue.min() < 1:
-                        if nc + clientes[ind[pmin]] <= kpic[1]:
+                        if nc + clientes[ind[pmin]] <= kpic[1]:  # solo pruebo que al incluir el nuevo itin no supere el limite superior
                             val2 = False
                             newday[ind[pmin]] = dia
                             nc = nc + clientes[ind[pmin]]
                             ni += 1
                         else:
-                            ivalue[pmin] = 1
+                            ivalue[pmin] = 1  # se le asigna el valor mas alto para descartarlo en el siguiente ciclo
                     else:
+                        # cuando ya no hay mas itinerarios que incluir o que los que estan superan los limites
                         val2 = False
                         continuar = False
                 # validacion
@@ -271,7 +275,7 @@ class Controller(object):
             cxd[i] = nc
             ixd[i] = ni
         # mejorar empanada
-        pass  # nivelar los ultimos ~3 dias de la mejor manera
+        pass  # nivelar los ultimos ~3-2-1 ultimos dias de la mejor manera
         # update plots
         self.update_plots(data, newday, dias[:, 0], cxd, ixd)
         # itins faltantes:
